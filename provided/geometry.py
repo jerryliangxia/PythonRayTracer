@@ -16,7 +16,18 @@ class Geometry:
         self.materials = materials
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        pass
+        if self.gtype == 'sphere':
+            return Sphere.intersect(self, ray, intersect)
+        elif self.gtype == 'plane':
+            return Plane.intersect(self, ray, intersect)
+        elif self.gtype == 'cube':
+            return AABB.intersect(self, ray, intersect)
+        elif self.gtype == 'mesh':
+            return Mesh.intersect(self, ray, intersect)
+        elif self.gtype == 'hierarchy':
+            return Hierarchy.intersect(self, ray, intersect)
+        else:
+            raise NotImplementedError(f"Intersection not implemented for {self.gtype}")
 
 
 class Sphere(Geometry):
@@ -41,6 +52,7 @@ class Sphere(Geometry):
             # Choose the smallest positive t value as the intersection point
             t = min(filter(lambda x: x > 0, [t1, t2]), default=None)
             if t is not None:
+                intersect.time = t
                 intersect.point = p + t * d
                 intersect.normal = glm.normalize(intersect.point - self.center)
                 intersect.material = self.materials[0]
