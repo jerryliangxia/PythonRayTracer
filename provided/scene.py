@@ -41,6 +41,59 @@ class Scene:
         self.lights = lights  # all lights in the scene
         self.materials = materials  # all materials of objects in the scene
         self.objects = objects  # all objects in the scene
+        self.shadow_epsilon = 1e-3
+    
+    def generate_ray(self, i, j, left, right, top, bottom, u, v, w, d):
+        u_coord = left + (right - left) * (i + 0.5) / self.width
+        v_coord = bottom + (top - bottom) * (j + 0.5) / self.height
+        ray_dir = glm.normalize(u * u_coord + v * v_coord - w * d)
+        return hc.Ray(self.position, ray_dir)
+    
+    def find_closest_intersection(self, ray):
+        closest_t = float('inf')
+        closest_intersection = hc.Intersection.default()
+        for obj in self.objects:
+            intersection = hc.Intersection.default()
+            if obj.intersect(ray, intersection) and intersection.time < closest_t:
+                closest_t = intersection.time
+                closest_intersection = intersection
+        return closest_intersection
+    
+    def calculate_light_contribution(self, intersection, light):
+        colour = glm.vec3(0,0,0)
+
+        # Ambient
+        colour += self.ambient * light.colour
+
+        # Diffuse
+        L = glm.normalize(light.vector - intersection.point)
+        N = intersection.normal
+        diffuse_intensity = max(glm.dot(N, L), 0)
+        colour += intersection.material.diffuse * light.colour * diffuse_intensity
+        
+        # Specular
+        V = glm.normalize(self.position - intersection.point)
+        H = glm.normalize(L + V)
+        dot_NH = glm.dot(N, H)
+        epsilon = 1e-6
+
+        if dot_NH > epsilon:
+            specular_intensity = dot_NH ** intersection.material.hardness
+        else:
+            specular_intensity = 0.0
+        colour += intersection.material.specular * light.colour * specular_intensity
+
+        return colour
+
+    
+    def is_in_shadow(self, intersection, light):
+        offset_position = intersection.point + intersection.normal * self.shadow_epsilon
+        to_light = light.vector - offset_position
+        shadow_ray = hc.Ray(offset_position, to_light)
+        for obj in self.objects:
+            if obj.intersect(shadow_ray, hc.Intersection.default()):
+                return True
+        return False
 
     def render(self):
         image = np.zeros((self.width, self.height, 3))
@@ -59,48 +112,19 @@ class Scene:
 
         for i in range(self.width):
             for j in range(self.height):
+                # Generate Rays
+                ray = self.generate_ray(i, j, left, right, top, bottom, u, v, w, d)
 
-                # TODO: Generate rays
-                u_coord = left + (right - left) * (i + 0.5) / self.width
-                v_coord = bottom + (top - bottom) * (j + 0.5) / self.height
-                ray_dir = glm.normalize(u * u_coord + v * v_coord - w * d)
-                ray = hc.Ray(self.position, ray_dir)
-
-                # TODO: Test for intersection
-                closest_intersection = hc.Intersection.default()
-                closest_t = float('inf')
-
-                for obj in self.objects:
-                    intersection = hc.Intersection.default()
-                    if obj.intersect(ray, intersection) and intersection.time < closest_t:
-                        closest_t = intersection.time
-                        closest_intersection = intersection
+                # Test for intersection
+                closest_intersection = self.find_closest_intersection(ray)
 
                 # TODO: Perform shading computations on the intersection point
-                if closest_t < float('inf'):
+                if closest_intersection.time < float('inf'):
                     colour = glm.vec3(0, 0, 0)
                     for light in self.lights:
-                        colour += self.ambient * light.colour
-
-                        L = glm.normalize(light.vector - closest_intersection.point)
-                        N = closest_intersection.normal
-                        diffuse_intensity = max(glm.dot(N, L), 0)
-                        diffuse = closest_intersection.material.diffuse * light.colour * diffuse_intensity
-                        colour += diffuse
-
-                        # Compute specular component (Blinn-Phong)
-                        V = glm.normalize(self.position - closest_intersection.point)
-                        H = glm.normalize(L + V)
-                        dot_NH = glm.dot(N, H)
-                        epsilon = 1e-6
-
-                        if dot_NH > epsilon:
-                            specular_intensity = dot_NH ** closest_intersection.material.hardness
-                        else:
-                            specular_intensity = 0.0
-                        specular = closest_intersection.material.specular * light.colour * specular_intensity
-                        colour += specular
-
+                        if self.is_in_shadow(closest_intersection, light):
+                            continue
+                        colour += self.calculate_light_contribution(closest_intersection, light)
                     colour = glm.clamp(colour, 0, 1)
                 else:
                     colour = glm.vec3(0, 0, 0)
