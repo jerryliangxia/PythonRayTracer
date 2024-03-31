@@ -43,11 +43,7 @@ class Scene:
         self.objects = objects  # all objects in the scene
 
     def render(self):
-
         image = np.zeros((self.width, self.height, 3))
-
-        # Geometry objects
-        sphere = geom.Sphere("Sphere", "sphere", self.materials, glm.vec3(0, 0, 0), 1.0)
 
         cam_dir = self.position - self.lookat
         d = 1.0
@@ -63,7 +59,6 @@ class Scene:
 
         for i in range(self.width):
             for j in range(self.height):
-                colour = glm.vec3(0, 0, 0)
 
                 # TODO: Generate rays
                 u_coord = left + (right - left) * (i + 0.5) / self.width
@@ -83,8 +78,9 @@ class Scene:
 
                 # TODO: Perform shading computations on the intersection point
                 if closest_t < float('inf'):
+                    colour = glm.vec3(0, 0, 0)
                     for light in self.lights:
-                        colour = self.ambient * light.colour
+                        colour += self.ambient * light.colour
 
                         L = glm.normalize(light.vector - closest_intersection.point)
                         N = closest_intersection.normal

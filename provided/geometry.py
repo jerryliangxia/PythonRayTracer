@@ -38,22 +38,22 @@ class Sphere(Geometry):
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
         # TODO: Create intersect code for Sphere
-        p = ray.origin
-        d = ray.direction
-        b = 2 * glm.dot(p, d)
-        c = glm.dot(p, p) - self.radius ** 2
-        discriminant = b ** 2 - 4 * c
+        L = ray.origin - self.center
+        a = glm.dot(ray.direction, ray.direction)
+        b = 2 * glm.dot(ray.direction, L)
+        c = glm.dot(L, L) - self.radius ** 2
+        discriminant = b ** 2 - 4 * a * c
 
         if discriminant < 0:
             return False
         else:
-            t1 = (-b - math.sqrt(discriminant)) / 2
-            t2 = (-b + math.sqrt(discriminant)) / 2
-            # Choose the smallest positive t value as the intersection point
+            sqrt_discriminant = math.sqrt(discriminant)
+            t1 = (-b - sqrt_discriminant) / (2 * a)
+            t2 = (-b + sqrt_discriminant) / (2 * a)
             t = min(filter(lambda x: x > 0, [t1, t2]), default=None)
             if t is not None:
                 intersect.time = t
-                intersect.point = p + t * d
+                intersect.point = ray.origin + t * ray.direction
                 intersect.normal = glm.normalize(intersect.point - self.center)
                 intersect.material = self.materials[0]
                 return True
@@ -67,8 +67,27 @@ class Plane(Geometry):
         self.normal = normal
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        pass
         # TODO: Create intersect code for Plane
+        # Calculate the intersection using the plane equation
+        denom = glm.dot(self.normal, ray.direction)
+        if abs(denom) > 1e-6:
+            t = glm.dot(self.point - ray.origin, self.normal) / denom
+            if t >= 0:
+                intersect.point = ray.origin + t * ray.direction
+                intersect.normal = self.normal
+                intersect.time = t
+
+                if len(self.materials) == 2:
+                    checker_x = int(math.floor(intersect.point.x))
+                    checker_z = int(math.floor(intersect.point.z))
+                    if (checker_x + checker_z) % 2 == 0:
+                        intersect.material = self.materials[0]
+                    else:
+                        intersect.material = self.materials[1]
+                else:
+                    intersect.material = self.materials[0]
+                return True
+        return False
 
 
 class AABB(Geometry):
