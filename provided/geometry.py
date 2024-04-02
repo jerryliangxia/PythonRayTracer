@@ -20,7 +20,7 @@ class Geometry:
             return Sphere.intersect(self, ray, intersect)
         elif self.gtype == 'plane':
             return Plane.intersect(self, ray, intersect)
-        elif self.gtype == 'cube':
+        elif self.gtype == 'box':
             return AABB.intersect(self, ray, intersect)
         elif self.gtype == 'mesh':
             return Mesh.intersect(self, ray, intersect)
@@ -99,8 +99,30 @@ class AABB(Geometry):
         self.maxpos = center + halfside
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        pass
         # TODO: Create intersect code for Cube
+        t_min = (self.minpos - ray.origin) / ray.direction
+        t_max = (self.maxpos - ray.origin) / ray.direction
+
+        t1 = glm.min(t_min, t_max)
+        t2 = glm.max(t_min, t_max)
+
+        t_near = max(t1.x, t1.y, t1.z)
+        t_far = min(t2.x, t2.y, t2.z)
+
+        if t_near > t_far or t_far < 0:
+            return False
+        
+        intersect.time = t_near if t_near > 0 else t_far
+        intersect.point = ray.origin + intersect.time * ray.direction
+
+        if intersect.time == t1.x or intersect.time == t2.x:
+            intersect.normal = glm.vec3(-1 if intersect.time == t1.x else 1, 0, 0)
+        elif intersect.time == t1.y or intersect.time == t2.y:
+            intersect.normal = glm.vec3(0, -1 if intersect.time == t1.y else 1, 0)
+        else:
+            intersect.normal = glm.vec3(0, 0, -1 if intersect.time == t1.z else 1)
+        intersect.material = self.materials[0]
+        return True
 
 
 class Mesh(Geometry):
