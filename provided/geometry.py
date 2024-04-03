@@ -122,6 +122,7 @@ class AABB(Geometry):
         else:
             intersect.normal = glm.vec3(0, 0, -1 if intersect.time == t1.z else 1)
         intersect.material = self.materials[0]
+        intersect.normal = -intersect.normal
         return True
 
 
@@ -162,5 +163,5 @@ class Hierarchy(Geometry):
         self.t = t
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        pass
         # TODO: Create intersect code for Hierarchy
+        pass
