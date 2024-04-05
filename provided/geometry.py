@@ -24,7 +24,7 @@ class Geometry:
             return AABB.intersect(self, ray, intersect)
         elif self.gtype == 'mesh':
             return Mesh.intersect(self, ray, intersect)
-        elif self.gtype == 'hierarchy':
+        elif self.gtype == 'node':
             return Hierarchy.intersect(self, ray, intersect)
         else:
             raise NotImplementedError(f"Intersection not implemented for {self.gtype}")
@@ -139,8 +139,29 @@ class Mesh(Geometry):
             self.norms.append(glm.vec3(n[0], n[1], n[2]))
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        pass
         # TODO: Create intersect code for Mesh
+        hit = False
+        for face in self.faces:
+            v0, v1, v2 = self.verts[face[0]], self.verts[face[1]], self.verts[face[2]]
+            normal = glm.normalize(glm.cross(v1 - v0, v2 - v0))
+            # Ray-plane intersection
+            denom = glm.dot(normal, ray.direction)
+            if abs(denom) > 1e-6:
+                t = glm.dot(v0 - ray.origin, normal) / denom
+                if t < 0:
+                    continue
+                # Compute the intersection point
+                P = ray.origin + t * ray.direction
+                # Inside-out test
+                if glm.dot(normal, glm.cross(v1 - v0, P - v0)) < 0 or glm.dot(normal, glm.cross(v2 - v1, P - v1)) < 0 or glm.dot(normal, glm.cross(v0 - v2, P - v2)) < 0:
+                    continue
+                if not hit or t < intersect.time:
+                    hit = True
+                    intersect.time = t
+                    intersect.point = P
+                    intersect.normal = normal if denom < 0 else -normal
+                    intersect.material = self.materials[0]
+        return hit
 
 
 class Hierarchy(Geometry):
@@ -164,4 +185,16 @@ class Hierarchy(Geometry):
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
         # TODO: Create intersect code for Hierarchy
-        pass
+        transformed_ray = hc.Ray(
+            glm.vec3(self.Minv * glm.vec4(ray.origin, 1.0)),
+            glm.normalize(glm.vec3(self.Minv * glm.vec4(ray.direction, 0.0)))
+        )
+        hit = False
+        for child in self.children:
+            if child.intersect(transformed_ray, intersect):
+                hit = True
+                intersect.normal = glm.normalize(
+                    glm.vec3(glm.transpose(self.Minv) * glm.vec4(intersect.normal, 0.0)))
+                if intersect.material is None:
+                    intersect.material = self.materials[0]
+        return hit

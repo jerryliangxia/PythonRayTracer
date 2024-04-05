@@ -33,7 +33,7 @@
         },
         {
             "name": "torus", "type": "mesh",
-            "filepath": "./meshes/torus.obj",
+            "filepath": "../meshes/torus.obj",
             "scale": 1.0, "position": [0.0, 0.0, 0.0],
             "materials": [2]
         }        
