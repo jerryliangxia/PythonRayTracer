@@ -124,9 +124,9 @@ class Scene:
                     for light in self.lights:
                         if self.is_in_shadow(closest_intersection, light):
                             colour += self.ambient * light.colour
-                            # colour += self.calculate_light_contribution(closest_intersection, light)
                         else:
                             colour += self.calculate_light_contribution(closest_intersection, light)
+                        colour *= light.power
                     colour = glm.clamp(colour, 0, 1)
                 else:
                     colour = glm.vec3(0, 0, 0)
