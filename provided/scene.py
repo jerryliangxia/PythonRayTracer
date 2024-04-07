@@ -143,9 +143,7 @@ class Scene:
                 # Generate Rays
                 ray = self.generate_ray(i, j, left, right, top, bottom, u, v, w, d)
 
-                # Test for intersection
-                closest_intersection = self.find_closest_intersection(ray)
-
+                # Get Colour
                 colour = self.trace_ray(ray)
 
                 image[i, j, 0] = max(0.0, min(1.0, colour.x))

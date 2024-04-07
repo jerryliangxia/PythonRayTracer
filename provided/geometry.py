@@ -184,17 +184,30 @@ class Hierarchy(Geometry):
         self.t = t
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        # TODO: Create intersect code for Hierarchy
+        # Transform the ray into the local space of the hierarchy
         transformed_ray = hc.Ray(
             glm.vec3(self.Minv * glm.vec4(ray.origin, 1.0)),
             glm.normalize(glm.vec3(self.Minv * glm.vec4(ray.direction, 0.0)))
         )
         hit = False
+        closest_time = float('inf')
+        temp_intersect = hc.Intersection.default()  # Temporary intersection to store child intersections
+
         for child in self.children:
-            if child.intersect(transformed_ray, intersect):
-                hit = True
-                intersect.normal = glm.normalize(
-                    glm.vec3(glm.transpose(self.Minv) * glm.vec4(intersect.normal, 0.0)))
-                if intersect.material is None:
-                    intersect.material = self.materials[0]
+            if child.intersect(transformed_ray, temp_intersect):
+                # Transform the intersection point back to world space to calculate correct time
+                world_space_point = glm.vec3(self.M * glm.vec4(temp_intersect.point, 1.0))
+                world_space_time = glm.length(world_space_point - ray.origin)
+
+                # Check if this intersection is closer than previous ones
+                if world_space_time < closest_time:
+                    closest_time = world_space_time
+                    intersect.time = world_space_time
+                    intersect.point = world_space_point
+                    intersect.material = temp_intersect.material
+                    # Transform the normal back to world space
+                    transformed_normal = glm.vec3(glm.transpose(self.Minv) * glm.vec4(temp_intersect.normal, 0.0))
+                    intersect.normal = glm.normalize(transformed_normal)
+                    hit = True
+
         return hit

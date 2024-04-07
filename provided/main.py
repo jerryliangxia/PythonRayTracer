@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # Adapted from code by Loïc Nassif and Paul Kry
 
 parse = argparse.ArgumentParser()
-parse.add_argument("--infile", type=str, default="../scenes/TwoSpheresPlaneMirror.json",
+parse.add_argument("--infile", type=str, default="../scenes/BoxStacks.json",
                    help="Name of json file that will define the scene")
 parse.add_argument("--outfile", type=str, default="out.png", help="Name of png that will contain the render")
 args = parse.parse_args()
