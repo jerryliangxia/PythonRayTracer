@@ -42,6 +42,7 @@ class Scene:
         self.materials = materials  # all materials of objects in the scene
         self.objects = objects  # all objects in the scene
         self.shadow_epsilon = 1e-3
+        self.max_depth = 50
     
     def generate_ray(self, i, j, left, right, top, bottom, u, v, w, d):
         u_coord = left + (right - left) * (i + 0.5) / self.width
@@ -94,6 +95,33 @@ class Scene:
             if obj.intersect(shadow_ray, hc.Intersection.default()):
                 return True
         return False
+    
+    def trace_ray(self, ray, depth=0):
+        if depth > self.max_depth:  # Avoid infinite recursion
+            return glm.vec3(0, 0, 0)
+
+        intersection = self.find_closest_intersection(ray)
+        if intersection.time < float('inf'):
+            if intersection.material.is_mirror:
+                reflection_direction = self.reflect(ray.direction, intersection.normal)
+                reflection_ray = hc.Ray(intersection.point + self.shadow_epsilon * intersection.normal, reflection_direction)
+                reflection_color = self.trace_ray(reflection_ray, depth + 1)
+                return reflection_color
+            else:
+                # Calculate direct lighting
+                colour = glm.vec3(0, 0, 0)
+                for light in self.lights:
+                    if self.is_in_shadow(intersection, light):
+                        colour += self.ambient * light.colour
+                    else:
+                        colour += self.calculate_light_contribution(intersection, light)
+                    colour *= light.power
+                return colour
+        else:
+            return glm.vec3(0, 0, 0)
+
+    def reflect(self, direction, normal):
+        return direction - 2 * glm.dot(direction, normal) * normal
 
     def render(self):
         image = np.zeros((self.width, self.height, 3))
@@ -118,18 +146,7 @@ class Scene:
                 # Test for intersection
                 closest_intersection = self.find_closest_intersection(ray)
 
-                # TODO: Perform shading computations on the intersection point
-                if closest_intersection.time < float('inf'):
-                    colour = glm.vec3(0, 0, 0)
-                    for light in self.lights:
-                        if self.is_in_shadow(closest_intersection, light):
-                            colour += self.ambient * light.colour
-                        else:
-                            colour += self.calculate_light_contribution(closest_intersection, light)
-                        colour *= light.power
-                    colour = glm.clamp(colour, 0, 1)
-                else:
-                    colour = glm.vec3(0, 0, 0)
+                colour = self.trace_ray(ray)
 
                 image[i, j, 0] = max(0.0, min(1.0, colour.x))
                 image[i, j, 1] = max(0.0, min(1.0, colour.y))

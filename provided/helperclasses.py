@@ -17,19 +17,21 @@ class Ray:
 
 
 class Material:
-    def __init__(self, name: str, specular: glm.vec3, diffuse: glm.vec3, hardness: float, ID: int):
+    def __init__(self, name: str, specular: glm.vec3, diffuse: glm.vec3, hardness: float, ID: int, is_mirror: bool):
         self.name = name
         self.specular = specular
         self.diffuse = diffuse
         self.hardness = hardness
         self.ID = ID
+        self.is_mirror = is_mirror
 
     @staticmethod
     def default():
         name = "default"
         specular = diffuse = glm.vec3(0, 0, 0)
         hardness = ID = -1
-        return Material(name, specular, diffuse, hardness, ID)
+        is_mirror = False
+        return Material(name, specular, diffuse, hardness, ID, is_mirror)
 
 
 class Light:

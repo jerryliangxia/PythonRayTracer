@@ -79,7 +79,8 @@ def load_scene(infile):
         mat_hardness = material["hardness"]
         mat_name = material["name"]
         mat_id = material["ID"]
-        materials.append(hc.Material(mat_name, mat_specular, mat_diffuse, mat_hardness, mat_id))
+        mat_is_mirror = material.get("mirror", False)
+        materials.append(hc.Material(mat_name, mat_specular, mat_diffuse, mat_hardness, mat_id, mat_is_mirror))
 
     # Loading geometry
     objects = []
