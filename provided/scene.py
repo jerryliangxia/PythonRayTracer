@@ -10,7 +10,17 @@ import helperclasses as hc
 # Adapted from code by Loïc Nassif and Paul Kry
 
 shadow_epsilon = 10**(-6)
-
+light_size = 0.25
+offsets = [
+    glm.vec3(-light_size, -light_size, -light_size),
+    glm.vec3(light_size, -light_size, -light_size),
+    glm.vec3(-light_size, light_size, -light_size),
+    glm.vec3(light_size, light_size, -light_size),
+    glm.vec3(-light_size, -light_size, light_size),
+    glm.vec3(light_size, -light_size, light_size),
+    glm.vec3(-light_size, light_size, light_size),
+    glm.vec3(light_size, light_size, light_size)
+]
 
 class Scene:
 
@@ -60,15 +70,15 @@ class Scene:
                 closest_intersection = intersection
         return closest_intersection
     
-    def calculate_light_contribution(self, intersection, light):
+    def calculate_light_contribution(self, intersection, light, light_offset):
         colour = glm.vec3(0, 0, 0)
 
         # Diffuse
-        L = glm.normalize(light.vector - intersection.point)
+        L = glm.normalize(light.vector + light_offset - intersection.point)
         N = intersection.normal
         diffuse_intensity = max(glm.dot(N, L), 0)
         colour += intersection.material.diffuse * light.colour * diffuse_intensity
-        
+
         # Specular
         V = glm.normalize(self.position - intersection.point)
         H = glm.normalize(L + V)
@@ -84,9 +94,9 @@ class Scene:
         return colour
 
     
-    def is_in_shadow(self, intersection, light):
+    def is_in_shadow(self, intersection, light, light_offset):
         offset_position = intersection.point + intersection.normal * self.shadow_epsilon
-        to_light = light.vector - offset_position
+        to_light = light.vector + light_offset - offset_position
         shadow_ray = hc.Ray(offset_position, to_light)
         for obj in self.objects:
             if obj.intersect(shadow_ray, hc.Intersection.default()):
@@ -110,8 +120,9 @@ class Scene:
                 # Calculate direct lighting
                 colour = self.ambient * intersection.material.diffuse   # Ambient is only added once
                 for light in self.lights:
-                    if not self.is_in_shadow(intersection, light):
-                        colour += self.calculate_light_contribution(intersection, light) * light.power
+                    for i, light_offset in enumerate(offsets):
+                        if not self.is_in_shadow(intersection, light, light_offset):
+                            colour += 1 / len(offsets) * self.calculate_light_contribution(intersection, light, light_offset) * light.power
                 return colour
         else:
             return glm.vec3(0, 0, 0)
