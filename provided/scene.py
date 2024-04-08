@@ -122,7 +122,7 @@ class Scene:
     def calc_refracting_ray(self, ray, intersection):
         normal = intersection.normal
         n1, n2, refl, trans = 1.0, intersection.material.ior, 0.0, 0.0
-        cosI = glm.dot(ray.direction, normal)
+        cosI = glm.dot(glm.normalize(ray.direction), normal)
 
         if cosI > 0.0:
             n1, n2 = n2, n1
@@ -137,15 +137,11 @@ class Scene:
         rt = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT)
         rn **= 2
         rt **= 2
-        refl = (rn + rt) * 0.5
-        trans = 1.0 - refl
 
         if n == 1.0 or cosT ** 2 < 0.0:  # Total internal reflection or same medium
-            refl = 1.0
-            trans = 0.0
             return self.calc_reflecting_ray(ray, intersection)
 
-        dir = n * ray.direction + (n * cosI - cosT) * normal
+        dir = n * glm.normalize(ray.direction) + (n * cosI - cosT) * normal
         dir = glm.normalize(dir)  # Ensure direction is normalized
         return hc.Ray(intersection.normal + dir * self.shadow_epsilon, dir)
 
@@ -157,7 +153,7 @@ class Scene:
         refracted_origin = intersection.point + self.shadow_epsilon * refracted_direction.direction
 
         # Create the refracted ray
-        refracted_ray = hc.Ray(refracted_origin, refracted_direction)
+        refracted_ray = hc.Ray(refracted_origin, refracted_direction.direction)
 
         # Trace the refracted ray through the scene
         refracted_color = self.trace_ray(refracted_ray, depth + 1)
