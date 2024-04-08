@@ -61,10 +61,7 @@ class Scene:
         return closest_intersection
     
     def calculate_light_contribution(self, intersection, light):
-        colour = glm.vec3(0,0,0)
-
-        # Ambient
-        colour += self.ambient * light.colour
+        colour = glm.vec3(0, 0, 0)
 
         # Diffuse
         L = glm.normalize(light.vector - intersection.point)
@@ -109,13 +106,10 @@ class Scene:
                 return reflection_color
             else:
                 # Calculate direct lighting
-                colour = glm.vec3(0, 0, 0)
+                colour = self.ambient * intersection.material.diffuse   # Ambient is only added once
                 for light in self.lights:
-                    if self.is_in_shadow(intersection, light):
-                        colour += self.ambient * light.colour
-                    else:
-                        colour += self.calculate_light_contribution(intersection, light)
-                    colour *= light.power
+                    if not self.is_in_shadow(intersection, light):
+                        colour += self.calculate_light_contribution(intersection, light) * light.power
                 return colour
         else:
             return glm.vec3(0, 0, 0)
