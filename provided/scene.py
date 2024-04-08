@@ -104,6 +104,8 @@ class Scene:
                 reflection_ray = hc.Ray(intersection.point + self.shadow_epsilon * intersection.normal, reflection_direction)
                 reflection_color = self.trace_ray(reflection_ray, depth + 1)
                 return reflection_color
+            elif intersection.material.is_transparent:
+                return self.refract(ray, intersection, depth + 1)
             else:
                 # Calculate direct lighting
                 colour = self.ambient * intersection.material.diffuse   # Ambient is only added once
@@ -116,6 +118,52 @@ class Scene:
 
     def reflect(self, direction, normal):
         return direction - 2 * glm.dot(direction, normal) * normal
+
+    def calc_refracting_ray(self, ray, intersection):
+        normal = intersection.normal
+        n1, n2, refl, trans = 1.0, intersection.material.ior, 0.0, 0.0
+        cosI = glm.dot(ray.direction, normal)
+
+        if cosI > 0.0:
+            n1, n2 = n2, n1
+            normal = -normal  # Inverting the normal
+            cosI = -cosI
+        n = n1 / n2
+        sinT2 = n ** 2 * (1.0 - cosI ** 2)
+        cosT = math.sqrt(max(0.0, 1.0 - sinT2))  # Ensure non-negative for sqrt
+
+        # Fresnel equations
+        rn = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT)
+        rt = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT)
+        rn **= 2
+        rt **= 2
+        refl = (rn + rt) * 0.5
+        trans = 1.0 - refl
+
+        if n == 1.0 or cosT ** 2 < 0.0:  # Total internal reflection or same medium
+            refl = 1.0
+            trans = 0.0
+            return self.calc_reflecting_ray(ray, intersection)
+
+        dir = n * ray.direction + (n * cosI - cosT) * normal
+        dir = glm.normalize(dir)  # Ensure direction is normalized
+        return hc.Ray(intersection.normal + dir * self.shadow_epsilon, dir)
+
+    def refract(self, ray, intersection, depth):
+        # Calculate the refracted ray direction (simplified, actual calculation is more complex)
+        refracted_direction = self.calc_refracting_ray(ray, intersection)
+
+        # Offset the intersection point slightly to avoid self-intersection
+        refracted_origin = intersection.point + self.shadow_epsilon * refracted_direction.direction
+
+        # Create the refracted ray
+        refracted_ray = hc.Ray(refracted_origin, refracted_direction)
+
+        # Trace the refracted ray through the scene
+        refracted_color = self.trace_ray(refracted_ray, depth + 1)
+
+        # Return the color contributed by the refracted ray
+        return refracted_color
 
     def render(self):
         image = np.zeros((self.width, self.height, 3))
