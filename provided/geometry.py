@@ -102,27 +102,21 @@ class AABB(Geometry):
         # TODO: Create intersect code for Cube
         t_min = (self.minpos - ray.origin) / ray.direction
         t_max = (self.maxpos - ray.origin) / ray.direction
-
         t1 = glm.min(t_min, t_max)
         t2 = glm.max(t_min, t_max)
-
         t_near = max(t1.x, t1.y, t1.z)
         t_far = min(t2.x, t2.y, t2.z)
-
-        if t_near > t_far or t_far < 0:
+        if t_near > t_far or t_far < epsilon:
             return False
-        
-        intersect.time = t_near if t_near > 0 else t_far
-        intersect.point = ray.origin + intersect.time * ray.direction
-
-        if intersect.time == t1.x or intersect.time == t2.x:
-            intersect.normal = glm.vec3(-1 if intersect.time == t1.x else 1, 0, 0)
-        elif intersect.time == t1.y or intersect.time == t2.y:
-            intersect.normal = glm.vec3(0, -1 if intersect.time == t1.y else 1, 0)
-        else:
-            intersect.normal = glm.vec3(0, 0, -1 if intersect.time == t1.z else 1)
+        intersect.point = ray.origin + t_near * ray.direction
+        intersect.time = t_near
+        # Determine face hit from multiple AABB Faces
+        normal = glm.vec3(0, 0, 0)
+        for i in range(3):
+            if t_near == t1[i]:
+                normal[i] = 1 if t_min[i] > t_max[i] else -1
+        intersect.normal = normal
         intersect.material = self.materials[0]
-        intersect.normal = -intersect.normal
         return True
 
 
