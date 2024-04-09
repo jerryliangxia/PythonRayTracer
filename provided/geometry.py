@@ -205,3 +205,56 @@ class Hierarchy(Geometry):
                     hit = True
 
         return hit
+
+class Quadric(Geometry):
+    def __init__(self, name: str, gtype: str, materials: list[hc.Material], point: glm.vec3, coefficients: dict):
+        super().__init__(name, gtype, materials)
+        self.point = point
+        self.coefficients = coefficients  # A dictionary of the coefficients A, B, C, D, E, F, G, H, I, J
+
+    @staticmethod
+    def from_json(name: str, g_type: str, materials: list[hc.Material], point: glm.vec3, geometry: dict):
+        coefficients = {k: geometry["coefficients"][k] for k in "ABCDEFGHIJ"}
+        return Quadric(name, g_type, materials, point, coefficients)
+    
+    def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
+        A, B, C, D, E, F, G, H, I, J = (self.coefficients[k] for k in "ABCDEFGHIJ")
+        xd, yd, zd = ray.direction.x, ray.direction.y, ray.direction.z
+        xo, yo, zo = ray.origin.x, ray.origin.y, ray.origin.z
+
+        Aq = A*xd**2 + B*yd**2 + C*zd**2 + D*xd*yd + E*xd*zd + F*yd*zd
+        Bq = 2*A*xo*xd + 2*B*yo*yd + 2*C*zo*zd + D*(xo*yd + yo*xd) + E*(xo*zd + zo*xd) + F*(yo*zd + yd*zo) + G*xd + H*yd + I*zd
+        Cq = A*xo**2 + B*yo**2 + C*zo**2 + D*xo*yo + E*xo*zo + F*yo*zo + G*xo + H*yo + I*zo + J
+
+        discriminant = Bq**2 - 4*Aq*Cq
+        if discriminant < 0:
+            return False  # No real roots, no intersection
+
+        sqrt_discriminant = math.sqrt(discriminant)
+        t0 = (-Bq - sqrt_discriminant) / (2 * Aq)
+        t1 = (-Bq + sqrt_discriminant) / (2 * Aq)
+
+        # Find the closest positive t value
+        t = None
+        if t0 > epsilon and (t1 <= epsilon or t0 < t1):
+            t = t0
+        elif t1 > epsilon:
+            t = t1
+
+        if t is not None:
+            intersect.time = t
+            intersect.point = ray.origin + t * ray.direction
+            # Compute the normal at the intersection point
+            intersect.normal = glm.vec3(
+                2*A*intersect.point.x + D*intersect.point.y + E*intersect.point.z + G,
+                2*B*intersect.point.y + D*intersect.point.x + F*intersect.point.z + H,
+                2*C*intersect.point.z + E*intersect.point.x + F*intersect.point.y + I
+            )
+            intersect.normal = glm.normalize(intersect.normal)
+            # Adjust the normal direction
+            if glm.dot(ray.direction, intersect.normal) > 0:
+                intersect.normal = -intersect.normal
+            intersect.material = self.materials[0]
+            return True
+
+        return False

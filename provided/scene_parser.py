@@ -163,6 +163,9 @@ def add_basic_shape(g_name: str, g_type: str, g_pos: glm.vec3, g_mats: list[hc.M
         g_path = geometry["filepath"]
         g_scale = geometry["scale"]
         objects.append(geom.Mesh(g_name, g_type, g_mats, g_pos, g_scale, g_path))
+    elif g_type == "quadric":
+        quadric_object = geom.Quadric.from_json(g_name, g_type, g_mats, g_pos, geometry)
+        objects.append(quadric_object)
     else:
         return False
     return True
