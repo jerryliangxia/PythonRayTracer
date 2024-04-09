@@ -218,9 +218,13 @@ class Quadric(Geometry):
         return Quadric(name, g_type, materials, point, coefficients)
     
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
+        # Adjust ray origin by the inverse of the quadric's position
+        adjusted_origin = ray.origin - self.point
+
+        # Use the adjusted ray origin for intersection calculations
         A, B, C, D, E, F, G, H, I, J = (self.coefficients[k] for k in "ABCDEFGHIJ")
         xd, yd, zd = ray.direction.x, ray.direction.y, ray.direction.z
-        xo, yo, zo = ray.origin.x, ray.origin.y, ray.origin.z
+        xo, yo, zo = adjusted_origin.x, adjusted_origin.y, adjusted_origin.z
 
         Aq = A*xd**2 + B*yd**2 + C*zd**2 + D*xd*yd + E*xd*zd + F*yd*zd
         Bq = 2*A*xo*xd + 2*B*yo*yd + 2*C*zo*zd + D*(xo*yd + yo*xd) + E*(xo*zd + zo*xd) + F*(yo*zd + yd*zo) + G*xd + H*yd + I*zd
@@ -245,10 +249,11 @@ class Quadric(Geometry):
             intersect.time = t
             intersect.point = ray.origin + t * ray.direction
             # Compute the normal at the intersection point
+            local_intersect_point = intersect.point - self.point
             intersect.normal = glm.vec3(
-                2*A*intersect.point.x + D*intersect.point.y + E*intersect.point.z + G,
-                2*B*intersect.point.y + D*intersect.point.x + F*intersect.point.z + H,
-                2*C*intersect.point.z + E*intersect.point.x + F*intersect.point.y + I
+                2*A*local_intersect_point.x + D*local_intersect_point.y + E*local_intersect_point.z + G,
+                2*B*local_intersect_point.y + D*local_intersect_point.x + F*local_intersect_point.z + H,
+                2*C*local_intersect_point.z + E*local_intersect_point.x + F*local_intersect_point.y + I
             )
             intersect.normal = glm.normalize(intersect.normal)
             # Adjust the normal direction
