@@ -97,6 +97,7 @@ def load_scene(infile):
         g_pos = populateVec(geometry["position"])
         g_mats = associate_material(materials, geometry["materials"])
 
+
         if add_basic_shape(g_name, g_type, g_pos, g_mats, geometry, objects):
             # Non-hierarchies are straightforward
             continue
@@ -143,9 +144,13 @@ def load_scene(infile):
 def add_basic_shape(g_name: str, g_type: str, g_pos: glm.vec3, g_mats: list[hc.Material], geometry, objects: list[geom.Geometry]):
     # Function for adding non-hierarchies to a list, since there's nothing extra to do with them
     # Returns True if a shape was added, False otherwise
-    if g_type == "sphere":
+    if g_type == "sphere" or g_type == "movingsphere":
         g_radius = geometry["radius"]
-        objects.append(geom.Sphere(g_name, g_type, g_mats, g_pos, g_radius))
+        g_center = populateVec(geometry["position"])
+        # Check for motion parameters
+        g_start = populateVec(geometry.get("start", geometry["position"]))
+        g_end = populateVec(geometry.get("end", geometry["position"]))
+        objects.append(geom.Sphere(g_name, g_type, g_mats, g_center, g_radius, g_start, g_end))
     elif g_type == "plane":
         g_normal = populateVec(geometry["normal"])
         objects.append(geom.Plane(g_name, g_type, g_mats, g_pos, g_normal))

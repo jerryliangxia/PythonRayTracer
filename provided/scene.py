@@ -2,6 +2,7 @@ import math
 
 import glm
 import numpy as np
+import random
 
 import geometry as geom
 import helperclasses as hc
@@ -58,7 +59,8 @@ class Scene:
         u_coord = left + (right - left) * (i + 0.5) / self.width
         v_coord = bottom + (top - bottom) * (j + 0.5) / self.height
         ray_dir = glm.normalize(u * u_coord + v * v_coord - w * d)
-        return hc.Ray(self.position, ray_dir)
+        ray_time = random.uniform(0.0, 1.0)  # Random time between 0 and 1
+        return hc.Ray(self.position, ray_dir, ray_time)
     
     def find_closest_intersection(self, ray):
         closest_t = float('inf')
@@ -189,12 +191,14 @@ class Scene:
 
         for i in range(self.width):
             for j in range(self.height):
-                # Generate Rays
-                ray = self.generate_ray(i, j, left, right, top, bottom, u, v, w, d)
+                colour = glm.vec3(0, 0, 0)
+                for _ in range(self.samples):
+                    # Generate Rays
+                    ray = self.generate_ray(i, j, left, right, top, bottom, u, v, w, d)
 
-                # Get Colour
-                colour = self.trace_ray(ray)
-
+                    # Get Colour
+                    colour += self.trace_ray(ray)
+                colour /= self.samples
                 image[i, j, 0] = max(0.0, min(1.0, colour.x))
                 image[i, j, 1] = max(0.0, min(1.0, colour.y))
                 image[i, j, 2] = max(0.0, min(1.0, colour.z))

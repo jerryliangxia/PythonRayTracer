@@ -59,6 +59,42 @@ class Sphere(Geometry):
                 return True
             return False
 
+class Sphere(Geometry):
+    def __init__(self, name: str, gtype: str, materials: list[hc.Material], center: glm.vec3, radius: float, center_end: glm.vec3 = None, time_start: float = 0.0, time_end: float = 1.0):
+        super().__init__(name, gtype, materials)
+        self.center_start = center
+        self.center_end = center_end if center_end is not None else center
+        self.radius = radius
+        self.time_start = time_start
+        self.time_end = time_end
+
+    def center_at_time(self, time):
+        # If the sphere is stationary, center_start and center_end will be the same, resulting in no movement.
+        return self.center_start + (self.center_end - self.center_start) * ((time - self.time_start) / (self.time_end - self.time_start))
+    
+    def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
+        moving_center = self.center_at_time(ray.time)
+        
+        L = ray.origin - moving_center
+        a = glm.dot(ray.direction, ray.direction)
+        b = 2 * glm.dot(ray.direction, L)
+        c = glm.dot(L, L) - self.radius ** 2
+        discriminant = b ** 2 - 4 * a * c
+
+        if discriminant < 0:
+            return False
+        else:
+            sqrt_discriminant = math.sqrt(discriminant)
+            t1 = (-b - sqrt_discriminant) / (2 * a)
+            t2 = (-b + sqrt_discriminant) / (2 * a)
+            t = min(filter(lambda x: x > 0, [t1, t2]), default=None)
+            if t is not None:
+                intersect.time = t
+                intersect.point = ray.origin + t * ray.direction
+                intersect.normal = glm.normalize(intersect.point - moving_center)
+                intersect.material = self.materials[0]
+                return True
+            return False
 
 class Plane(Geometry):
     def __init__(self, name: str, gtype: str, materials: list[hc.Material], point: glm.vec3, normal: glm.vec3):

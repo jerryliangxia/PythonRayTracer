@@ -5,9 +5,10 @@ import glm
 
 
 class Ray:
-    def __init__(self, o: glm.vec3, d: glm.vec3):
+    def __init__(self, o: glm.vec3, d: glm.vec3, time=0.0):
         self.origin = o
         self.direction = d
+        self.time = time
 
     def getDistance(self, point: glm.vec3):
         return glm.length(point - self.origin)
