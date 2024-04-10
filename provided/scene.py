@@ -54,16 +54,29 @@ class Scene:
         self.objects = objects  # all objects in the scene
         self.shadow_epsilon = 1e-3
         self.max_depth = 50
+
+    def random_in_unit_disk(self):
+        while True:
+            p = np.array([random.uniform(-1, 1), random.uniform(-1, 1), 0])
+            if np.dot(p, p) < 1:
+                return p
     
-    def generate_ray(self, i, j, left, right, top, bottom, u, v, w, d):
-        # Antialiasing: add random offset to i and j
-        random_i = i + random.random()
-        random_j = j + random.random()
-        u_coord = left + (right - left) * (random_i + 0.5) / self.width
-        v_coord = bottom + (top - bottom) * (random_j + 0.5) / self.height
+    def generate_ray(self, i, j, left, right, top, bottom, u, v, w, d, aperture, focus_dist):
+        # Calculate the ray direction as before
+        u_coord = left + (right - left) * (i + 0.5) / self.width
+        v_coord = bottom + (top - bottom) * (j + 0.5) / self.height
         ray_dir = glm.normalize(u * u_coord + v * v_coord - w * d)
-        ray_time = random.uniform(0.0, 1.0)  # For motion blur, if applicable
-        return hc.Ray(self.position, ray_dir, ray_time)
+        
+        # Calculate the ray origin for defocus blur
+        rd = aperture / 2 * self.random_in_unit_disk()
+        offset = u * rd[0] + v * rd[1]
+        
+        # Adjust the ray direction for the defocus blur
+        focus_point = self.position + focus_dist * ray_dir
+        ray_origin = self.position + offset
+        ray_direction = glm.normalize(focus_point - ray_origin)
+        
+        return hc.Ray(ray_origin, ray_direction)
     
     def find_closest_intersection(self, ray):
         closest_t = float('inf')
@@ -191,12 +204,14 @@ class Scene:
         u = glm.cross(self.up, w)
         u = glm.normalize(u)
         v = glm.cross(w, u)
+        aperture = 0.1
+        focus_dist = 10.0
 
         for i in range(self.width):
             for j in range(self.height):
                 colour = glm.vec3(0, 0, 0)
                 for _ in range(self.samples):  # self.samples is now the number of samples per pixel for antialiasing
-                    ray = self.generate_ray(i, j, left, right, top, bottom, u, v, w, d)
+                    ray = self.generate_ray(i, j, left, right, top, bottom, u, v, w, d, aperture, focus_dist)
                     colour += self.trace_ray(ray)
                 colour /= self.samples  # Average the color
                 # Clamp and assign the color to the image
