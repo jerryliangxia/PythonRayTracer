@@ -56,10 +56,13 @@ class Scene:
         self.max_depth = 50
     
     def generate_ray(self, i, j, left, right, top, bottom, u, v, w, d):
-        u_coord = left + (right - left) * (i + 0.5) / self.width
-        v_coord = bottom + (top - bottom) * (j + 0.5) / self.height
+        # Antialiasing: add random offset to i and j
+        random_i = i + random.random()
+        random_j = j + random.random()
+        u_coord = left + (right - left) * (random_i + 0.5) / self.width
+        v_coord = bottom + (top - bottom) * (random_j + 0.5) / self.height
         ray_dir = glm.normalize(u * u_coord + v * v_coord - w * d)
-        ray_time = random.uniform(0.0, 1.0)  # Random time between 0 and 1
+        ray_time = random.uniform(0.0, 1.0)  # For motion blur, if applicable
         return hc.Ray(self.position, ray_dir, ray_time)
     
     def find_closest_intersection(self, ray):
@@ -192,13 +195,11 @@ class Scene:
         for i in range(self.width):
             for j in range(self.height):
                 colour = glm.vec3(0, 0, 0)
-                for _ in range(self.samples):
-                    # Generate Rays
+                for _ in range(self.samples):  # self.samples is now the number of samples per pixel for antialiasing
                     ray = self.generate_ray(i, j, left, right, top, bottom, u, v, w, d)
-
-                    # Get Colour
                     colour += self.trace_ray(ray)
-                colour /= self.samples
+                colour /= self.samples  # Average the color
+                # Clamp and assign the color to the image
                 image[i, j, 0] = max(0.0, min(1.0, colour.x))
                 image[i, j, 1] = max(0.0, min(1.0, colour.y))
                 image[i, j, 2] = max(0.0, min(1.0, colour.z))

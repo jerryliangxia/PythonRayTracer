@@ -1,6 +1,6 @@
 {
     "resolution": [160, 120],
-    "AA": { "jitter": true, "samples": 2 },
+    "AA": { "jitter": true, "samples": 20 },
     "ambient": [0.2, 0.2, 0.2],
     "camera": {
         "position": [1.0, 2.0, 10.0],
