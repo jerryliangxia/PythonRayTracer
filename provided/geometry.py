@@ -73,9 +73,11 @@ class Sphere(Geometry):
         return self.center_start + (self.center_end - self.center_start) * ((time - self.time_start) / (self.time_end - self.time_start))
     
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        moving_center = self.center_at_time(ray.time)
-        
-        L = ray.origin - moving_center
+        if self.gtype == 'movingsphere':
+            moving_center = self.center_at_time(ray.time)
+            L = ray.origin - moving_center
+        else:
+            L = ray.origin - self.center_start
         a = glm.dot(ray.direction, ray.direction)
         b = 2 * glm.dot(ray.direction, L)
         c = glm.dot(L, L) - self.radius ** 2
@@ -91,7 +93,10 @@ class Sphere(Geometry):
             if t is not None:
                 intersect.time = t
                 intersect.point = ray.origin + t * ray.direction
-                intersect.normal = glm.normalize(intersect.point - moving_center)
+                if self.gtype == 'movingsphere':
+                    intersect.normal = glm.normalize(intersect.point - moving_center)
+                else:
+                    intersect.normal = glm.normalize(intersect.point - self.center_start)
                 intersect.material = self.materials[0]
                 return True
             return False

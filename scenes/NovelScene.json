@@ -1,0 +1,215 @@
+{
+  "resolution": [1200, 900],
+  "AA": { "jitter": true, "samples": 3 },
+  "dof": { "enabled": true, "aperture": 0.1, "focus_dist": 10.0 },
+  "ambient": [0.2, 0.2, 0.2],
+  "camera": {
+    "position": [0.0, 4.0, 6.0],
+    "lookAt": [0.0, 2.0, 0.0],
+    "up": [0.0, 1.0, 0.0],
+    "fov": 45.0
+  },
+  "materials": [
+    {
+      "name": "blue",
+      "ID": 0,
+      "diffuse": [0.0, 0.0, 1.0],
+      "specular": [0.5, 0.5, 0.5],
+      "hardness": 16
+    },
+    {
+      "name": "red",
+      "ID": 1,
+      "diffuse": [1.0, 0.0, 0.0],
+      "specular": [0.5, 0.5, 0.5],
+      "hardness": 50
+    },
+    {
+      "name": "black",
+      "ID": 2,
+      "diffuse": [0.0, 0.0, 0.0],
+      "specular": [0.0, 0.0, 0.0],
+      "hardness": 0
+    },
+    {
+      "name": "white",
+      "ID": 3,
+      "diffuse": [1.0, 1.0, 1.0],
+      "specular": [0.0, 0.0, 0.0],
+      "hardness": 0
+    },
+    {
+      "name": "mirror",
+      "ID": 4,
+      "diffuse": [1.0, 1.0, 1.0],
+      "specular": [1.0, 1.0, 1.0],
+      "hardness": 100,
+      "mirror": true
+    },
+    {
+      "name": "glass",
+      "ID": 5,
+      "diffuse": [0.0, 0.5, 0.5],
+      "specular": [0.9, 0.9, 0.9],
+      "hardness": 100,
+      "transparent": true,
+      "ior": 1.5
+    }
+  ],
+  "objects": [
+    {
+      "name": "plane",
+      "type": "plane",
+      "normal": [0.0, 1.0, 0.0],
+      "position": [0.0, 0.0, 0.0],
+      "materials": [2, 3]
+    },
+    {
+      "name": "mirror_sphere",
+      "type": "sphere",
+      "radius": 1.1,
+      "position": [-1.0, 1.1, -2.0],
+      "materials": [4]
+    },
+    {
+      "name": "blue_sphere",
+      "type": "movingsphere",
+      "radius": 0.5,
+      "position": [0.3, 0.5, -0.2],
+      "start": [0.3, 0.5, -0.2],
+      "end": [-0.3, -0.1, -0.8],
+      "materials": [0]
+    },
+    {
+      "name": "refraction_sphere0",
+      "type": "sphere",
+      "radius": 0.6,
+      "position": [-1.0, 0.5, 0.5],
+      "materials": [5]
+    },
+    {
+      "name": "refraction_sphere1",
+      "type": "sphere",
+      "radius": 0.6,
+      "position": [1.5, 0.8, 0.0],
+      "materials": [5]
+    },
+    {
+      "name": "sphereStack",
+      "type": "node",
+      "position": [-3.0, 1.0, -3.0],
+      "rotation": [0.0, 0.0, 0.0],
+      "scale": [1.0, 1.0, 1.0],
+      "materials": [],
+      "ref": "",
+      "children": [
+        {
+          "name": "sphere1",
+          "type": "node",
+          "rotation": [0.0, 0.0, 0.0],
+          "position": [0.0, 0.0, 0.0],
+          "scale": [1.0, 1.0, 1.0],
+          "materials": [],
+          "ref": "",
+          "children": [
+            {
+              "name": "sphere1",
+              "type": "sphere",
+              "radius": 1.0,
+              "position": [-1.0, 0.0, -1.0],
+              "materials": [1]
+            },
+            {
+              "name": "sphere2",
+              "type": "node",
+              "rotation": [0.0, 0.0, 0.0],
+              "position": [0.0, 2.0, 0.0],
+              "scale": [0.8, 0.8, 0.8],
+              "materials": [],
+              "ref": "",
+              "children": [
+                {
+                  "name": "sphere2",
+                  "type": "sphere",
+                  "radius": 0.8,
+                  "position": [0.0, 0.0, 0.0],
+                  "materials": [1]
+                },
+                {
+                  "name": "sphere3",
+                  "type": "node",
+                  "rotation": [0.0, 0.0, 0.0],
+                  "position": [0.0, 1.6, 0.0],
+                  "scale": [0.6, 0.6, 0.6],
+                  "materials": [],
+                  "ref": "",
+                  "children": [
+                    {
+                      "name": "sphere4",
+                      "type": "sphere",
+                      "radius": 0.6,
+                      "position": [0.0, 0.0, 0.0],
+                      "materials": [1]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sphereStack2",
+      "type": "node",
+      "position": [3.0, 0.6, -3.0],
+      "rotation": [0.0, 24.0, 0.0],
+      "scale": [0.5, 0.5, 0.5],
+      "materials": [],
+      "ref": "sphereStack"
+    },
+    {
+      "name": "hyperboloid",
+      "type": "quadric",
+      "coefficients": {
+        "A": -1,
+        "B": 1,
+        "C": 1,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0,
+        "H": 0,
+        "I": 0,
+        "J": -1
+      },
+      "position": [0.0, 0.0, -18.0],
+      "materials": [0]
+    },
+    {
+      "name": "monkey",
+      "type": "mesh",
+      "filepath": "../meshes/bunny.obj",
+      "scale": 1.0,
+      "position": [2.0, 0.6, -7.0],
+      "rotation": [0.0, 0.0, 0.0],
+      "materials": [1]
+    }
+  ],
+  "lights": [
+    {
+      "name": "light1",
+      "type": "point",
+      "position": [5.0, 10.0, 2.0],
+      "colour": [0.8, 0.8, 0.8],
+      "power": 0.7
+    },
+    {
+      "name": "light2",
+      "type": "point",
+      "position": [-10.0, 10.0, 2.0],
+      "colour": [0.8, 0.8, 0.8],
+      "power": 0.9
+    }
+  ]
+}

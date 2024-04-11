@@ -49,6 +49,24 @@ def load_scene(infile):
         jitter = False
         samples = 1
 
+    # Loading depth of field attribute
+    try:
+        dof = data["dof"]["enabled"]
+        aperture = data["dof"]["aperture"]
+        focus_dist = data["dof"]["focus_dist"]
+    except KeyError:
+        dof = False
+        aperture = 0.1
+        focus_dist = 10.0
+
+    # Soft shadows
+    try:
+        soft_shadows = data["soft_shadows"]
+        light_size = data["soft_shadows"]["light_size"]
+    except KeyError:
+        soft_shadows = False
+        light_size = 0.0
+
     # Loading scene lights
     lights = []
     try:
@@ -91,7 +109,7 @@ def load_scene(infile):
     rootNames = []
     roots = []
     for geometry in data["objects"]:
-        # Elements common to all objects: name, type, position, material(s)
+        # Elements common to base objects: name, type, position, material(s)
         g_name = geometry["name"]
         g_type = geometry["type"]
         g_pos = populateVec(geometry["position"])
@@ -136,8 +154,8 @@ def load_scene(infile):
 
     print("Parsing complete")
     return scene.Scene(width, height, jitter, samples,  # General settings
-                       cam_pos, cam_lookat, cam_up, cam_fov,  # Camera settings
-                       ambient, lights,  # Light settings
+                       cam_pos, cam_lookat, cam_up, cam_fov, dof, aperture, focus_dist,  # Camera settings
+                       ambient, lights, soft_shadows, light_size,  # Light settings
                        materials, objects)  # General settings
 
 
@@ -150,7 +168,7 @@ def add_basic_shape(g_name: str, g_type: str, g_pos: glm.vec3, g_mats: list[hc.M
         # Check for motion parameters
         g_start = populateVec(geometry.get("start", geometry["position"]))
         g_end = populateVec(geometry.get("end", geometry["position"]))
-        objects.append(geom.Sphere(g_name, g_type, g_mats, g_center, g_radius, g_start, g_end))
+        objects.append(geom.Sphere(g_name, g_type, g_mats, g_center, g_radius, g_end))
     elif g_type == "plane":
         g_normal = populateVec(geometry["normal"])
         objects.append(geom.Plane(g_name, g_type, g_mats, g_pos, g_normal))
@@ -178,7 +196,7 @@ def add_basic_shape(g_name: str, g_type: str, g_pos: glm.vec3, g_mats: list[hc.M
 
 def traverse_children(node: geom.Hierarchy, children, materials: list[hc.Material]):
     for geometry in children:
-        # Obtain info common to all shapes like in the main body of the parser
+        # Obtain info common to base shapes like in the main body of the parser
         g_name = geometry["name"]
         g_type = geometry["type"]
         try:
@@ -198,7 +216,7 @@ def traverse_children(node: geom.Hierarchy, children, materials: list[hc.Materia
             node.children.append(inner)
             traverse_children(inner, geometry["children"], materials)
         else:
-            print("Unkown child object type", g_type, ", skipping initialization")
+            print("Unknown child object type", g_type, ", skipping initialization")
 
 
 def associate_material(mats: list[hc.Material], ids: list[int]):
