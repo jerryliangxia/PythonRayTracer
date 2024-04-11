@@ -73,10 +73,9 @@
     },
     {
       "name": "blue_sphere",
-      "type": "movingsphere",
+      "type": "moving_sphere",
       "radius": 0.5,
       "position": [0.3, 0.5, -0.2],
-      "start": [0.3, 0.5, -0.2],
       "end": [-0.3, -0.1, -0.8],
       "materials": [0]
     },

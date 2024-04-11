@@ -16,18 +16,7 @@ class Geometry:
         self.materials = materials
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        if self.gtype == 'sphere':
-            return Sphere.intersect(self, ray, intersect)
-        elif self.gtype == 'plane':
-            return Plane.intersect(self, ray, intersect)
-        elif self.gtype == 'box':
-            return AABB.intersect(self, ray, intersect)
-        elif self.gtype == 'mesh':
-            return Mesh.intersect(self, ray, intersect)
-        elif self.gtype == 'node':
-            return Hierarchy.intersect(self, ray, intersect)
-        else:
-            raise NotImplementedError(f"Intersection not implemented for {self.gtype}")
+        pass
 
 
 class Sphere(Geometry):
@@ -37,7 +26,6 @@ class Sphere(Geometry):
         self.radius = radius
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        # TODO: Create intersect code for Sphere
         L = ray.origin - self.center
         a = glm.dot(ray.direction, ray.direction)
         b = 2 * glm.dot(ray.direction, L)
@@ -73,7 +61,7 @@ class Sphere(Geometry):
         return self.center_start + (self.center_end - self.center_start) * ((time - self.time_start) / (self.time_end - self.time_start))
     
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        if self.gtype == 'movingsphere':
+        if self.gtype == 'moving_sphere':
             moving_center = self.center_at_time(ray.time)
             L = ray.origin - moving_center
         else:
@@ -93,7 +81,7 @@ class Sphere(Geometry):
             if t is not None:
                 intersect.time = t
                 intersect.point = ray.origin + t * ray.direction
-                if self.gtype == 'movingsphere':
+                if self.gtype == 'moving_sphere':
                     intersect.normal = glm.normalize(intersect.point - moving_center)
                 else:
                     intersect.normal = glm.normalize(intersect.point - self.center_start)
@@ -108,7 +96,6 @@ class Plane(Geometry):
         self.normal = normal
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        # TODO: Create intersect code for Plane
         # Calculate the intersection using the plane equation
         denom = glm.dot(self.normal, ray.direction)
         if abs(denom) > 1e-6:
@@ -140,7 +127,6 @@ class AABB(Geometry):
         self.maxpos = center + halfside
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        # TODO: Create intersect code for Cube
         t_min = (self.minpos - ray.origin) / ray.direction
         t_max = (self.maxpos - ray.origin) / ray.direction
         t1 = glm.min(t_min, t_max)
@@ -174,7 +160,6 @@ class Mesh(Geometry):
             self.norms.append(glm.vec3(n[0], n[1], n[2]))
 
     def intersect(self, ray: hc.Ray, intersect: hc.Intersection):
-        # TODO: Create intersect code for Mesh
         hit = False
         for face in self.faces:
             v0, v1, v2 = self.verts[face[0]], self.verts[face[1]], self.verts[face[2]]

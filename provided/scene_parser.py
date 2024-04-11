@@ -162,11 +162,10 @@ def load_scene(infile):
 def add_basic_shape(g_name: str, g_type: str, g_pos: glm.vec3, g_mats: list[hc.Material], geometry, objects: list[geom.Geometry]):
     # Function for adding non-hierarchies to a list, since there's nothing extra to do with them
     # Returns True if a shape was added, False otherwise
-    if g_type == "sphere" or g_type == "movingsphere":
+    if g_type == "sphere" or g_type == "moving_sphere":
         g_radius = geometry["radius"]
         g_center = populateVec(geometry["position"])
         # Check for motion parameters
-        g_start = populateVec(geometry.get("start", geometry["position"]))
         g_end = populateVec(geometry.get("end", geometry["position"]))
         objects.append(geom.Sphere(g_name, g_type, g_mats, g_center, g_radius, g_end))
     elif g_type == "plane":
