@@ -1,3 +1,5 @@
+# Jerry Xia 260917329
+
 import numpy
 import provided.scene_parser as scene_parser
 import argparse
