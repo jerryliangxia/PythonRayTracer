@@ -1,0 +1,19 @@
+Title: Building Blocks in Space
+
+Technical Achievements:
+
+- Mirroring (middle sphere)
+- Refraction (two spheres in foreground)
+- Soft shadows (three red spheres)
+- Depth of field blur with aperture=0.25 and focus distance=10
+- Motion blur (blue sphere) from 5 samples
+- Quadrics (hyperboloid in the background)
+
+Artistic Motivations:
+
+I wanted to create complexity primarily through technical features by working with the medium of a simple scene. 
+
+I used basic 3D objects to act as “building blocks” on the many ways the objects can be manipulated or built upon. 
+
+As a result, I was able to show a range of details, encompassing depth of field blur, motion blur, and the geometric complexity of quadrics.
+

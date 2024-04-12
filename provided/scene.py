@@ -116,6 +116,9 @@ class Scene:
     def calculate_light_contribution(self, intersection, light, light_offset):
         colour = glm.vec3(0, 0, 0)
 
+        # Ambient
+        colour += self.ambient * light.colour
+
         # Diffuse
         L = glm.normalize(light.vector + light_offset - intersection.point)
         N = intersection.normal
@@ -161,15 +164,20 @@ class Scene:
                 return self.refract(ray, intersection, depth + 1)
             else:
                 # Calculate direct lighting
-                colour = self.ambient * intersection.material.diffuse   # Ambient is only added once
+                colour = glm.vec3(0, 0, 0)  # Ambient is only added once
                 for light in self.lights:
                     if self.soft_shadows:
                         for _, light_offset in enumerate(self.offsets):
                             if not self.is_in_shadow(intersection, light, light_offset):
                                 colour += 1 / len(self.offsets) * self.calculate_light_contribution(intersection, light, light_offset) * light.power
+                            else:
+                                colour += 1 / len(self.offsets) * self.ambient * light.colour * light.power
                     else:
                         if not self.is_in_shadow(intersection, light, glm.vec3(0, 0, 0)):
                             colour += self.calculate_light_contribution(intersection, light, glm.vec3(0, 0, 0)) * light.power
+                        else:
+                            colour += self.ambient * light.power * light.colour
+                        colour = glm.clamp(colour, 0.0, 1.0)
                 return colour
         else:
             return glm.vec3(0, 0, 0)
@@ -249,4 +257,5 @@ class Scene:
                 image[i, j, 0] = max(0.0, min(1.0, colour.x))
                 image[i, j, 1] = max(0.0, min(1.0, colour.y))
                 image[i, j, 2] = max(0.0, min(1.0, colour.z))
+            print(i)
         return image

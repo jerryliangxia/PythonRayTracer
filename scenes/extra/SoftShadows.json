@@ -1,6 +1,6 @@
 {
   "resolution": [640, 480],
-  "AA": { "jitter": true, "samples": 8 },
+  "AA": { "jitter": true, "samples": 1 },
   "soft_shadows": { "enabled": true, "light_size": 0.15 },
   "ambient": [0.2, 0.2, 0.2],
   "camera": {

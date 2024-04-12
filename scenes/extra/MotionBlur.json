@@ -2,7 +2,6 @@
     "resolution": [640, 480],
     "AA": { "jitter": true, "samples": 3 },
     "ambient": [0.2, 0.2, 0.2],
-    "soft_shadows": { "enabled": true, "light_size": 0.5 },
     "camera": {
         "position": [0.0, 4.0, 6.0],
         "lookAt": [0.0, 2.0, 0.0],
